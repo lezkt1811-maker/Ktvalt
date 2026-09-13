@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#07000c" />
+<title>Neon Photo Vault</title>
+<style>
+:root{
+  --bg:#060009; --panel:rgba(16,4,27,.94); --text:#fff; --muted:#bdaacb;
+  --pink:#ff2bd6; --purple:#8e52ff; --cyan:#21e9ff; --green:#41ffb2; --red:#ff4d74;
+  --border:rgba(255,255,255,.11);
+}
+*{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+body{min-height:100vh;background:
+radial-gradient(circle at 8% 0%,rgba(255,43,214,.18),transparent 28%),
+radial-gradient(circle at 95% 6%,rgba(33,233,255,.13),transparent 25%),
+linear-gradient(180deg,#060009,#0b0013 55%,#060009);padding:14px 12px 40px}
+.app{max-width:980px;margin:auto}
+.hero{text-align:center;padding:18px 4px 24px}
+.logo{font-size:42px;filter:drop-shadow(0 0 14px var(--pink))}
+h1{margin:6px 0 8px;font-size:clamp(2rem,8vw,3.6rem);letter-spacing:-.05em;
+background:linear-gradient(90deg,#fff,#ff8ee8,#a98cff,#6af3ff);color:transparent;-webkit-background-clip:text;background-clip:text}
+.hero p{margin:0;color:var(--muted);line-height:1.5}
+.badges{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:14px}
+.badge{font-size:.76rem;padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.04)}
+.panel{background:linear-gradient(160deg,rgba(25,7,39,.95),rgba(8,2,14,.95));border:1px solid rgba(255,43,214,.20);border-radius:18px;padding:15px;margin-bottom:14px;box-shadow:0 18px 44px rgba(0,0,0,.35),0 0 24px rgba(143,50,255,.11)}
+.row{display:flex;gap:10px;align-items:center}.wrap{flex-wrap:wrap}.spread{justify-content:space-between}
+h2{font-size:1rem;margin:0}.small{font-size:.76rem;color:var(--muted)}
+.status{padding:11px 12px;border-radius:13px;border:1px solid rgba(33,233,255,.18);background:rgba(33,233,255,.05);margin-bottom:12px;color:#e5fdff;font-size:.9rem}
+.status.good{border-color:rgba(65,255,178,.25);background:rgba(65,255,178,.06)}
+.status.bad{border-color:rgba(255,77,116,.28);background:rgba(255,77,116,.07)}
+input,button{font:inherit}
+input[type=password],input[type=text]{width:100%;background:rgba(0,0,0,.28);color:#fff;border:1px solid var(--border);border-radius:13px;padding:12px;outline:none}
+input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,43,214,.08)}
+button,.fileButton{border:0;border-radius:13px;min-height:46px;padding:0 14px;font-weight:800;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center}
+.primary,.fileButton{background:linear-gradient(135deg,var(--pink),var(--purple));box-shadow:0 0 18px rgba(255,43,214,.20)}
+.secondary{background:rgba(255,255,255,.07);border:1px solid var(--border)}
+.danger{background:rgba(255,77,116,.12);border:1px solid rgba(255,77,116,.28)}
+.fileButton input{display:none}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.queue{display:grid;gap:9px;margin-top:12px}
+.item{border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.035);padding:11px}
+.itemName{font-size:.87rem;font-weight:800;overflow-wrap:anywhere}
+.meta{font-size:.72rem;color:var(--muted);margin-top:4px}
+.progress{height:7px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-top:9px}
+.bar{height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--purple),var(--cyan));transition:width .15s}
+.archive{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+.card{border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.035);padding:11px;min-width:0}
+.thumb{width:100%;aspect-ratio:1.5;background:#09020e;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,.06);margin-bottom:9px}
+.card .name{font-weight:800;font-size:.83rem;overflow-wrap:anywhere}
+.cardButtons{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
+.cardButtons button{min-height:40px;font-size:.75rem;padding:0 8px}
+.note{font-size:.78rem;color:var(--muted);line-height:1.55}
+code{color:#8ef6ff}
+.empty{grid-column:1/-1;padding:20px;text-align:center;border:1px dashed var(--border);border-radius:14px;color:var(--muted)}
+@media(max-width:650px){.archive{grid-template-columns:1fr}.actions{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hero">
+    <div class="logo">🗃️</div>
+    <h1>NEON PHOTO VAULT</h1>
+    <p>Original-quality private photo archive for your phone.</p>
+    <div class="badges">
+      <span class="badge">🔒 Private key</span>
+      <span class="badge">🧬 SHA-256 duplicate protection</span>
+      <span class="badge">📦 Original bytes</span>
+      <span class="badge">📱 Batch phone upload</span>
+    </div>
+  </header>
+
+  <section class="panel">
+    <div id="status" class="status">Enter your vault URL and private key.</div>
+    <div class="row spread wrap"><h2>🔐 Connect to your Vault</h2><span class="small">Stored only on this device if you choose</span></div>
+    <div style="height:10px"></div>
+    <input id="apiUrl" type="text" placeholder="https://your-worker.your-subdomain.workers.dev" />
+    <div style="height:8px"></div>
+    <input id="vaultKey" type="password" placeholder="Private vault key" />
+    <div class="actions">
+      <button class="primary" id="connectBtn">⚡ Connect</button>
+      <button class="secondary" id="rememberBtn">💾 Remember on this phone</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="row spread wrap"><h2>📲 Upload originals</h2><span id="queueCount" class="small">0 selected</span></div>
+    <div class="actions">
+      <label class="fileButton">＋ Pick Photos<input id="fileInput" type="file" accept="image/*,.heic,.heif" multiple /></label>
+      <button id="uploadBtn" class="primary">⬆ Upload All</button>
+    </div>
+    <div id="queue" class="queue"></div>
+    <p class="note">No canvas, resizing, recompression, screenshots, or format conversion. The exact selected file bytes are uploaded.</p>
+  </section>
+
+  <section class="panel">
+    <div class="row spread wrap">
+      <h2>🖼️ Archive</h2>
+      <div class="row wrap">
+        <button class="secondary" id="refreshBtn">↻ Refresh</button>
+        <button class="secondary" id="verifyBtn">✓ Verify Selected</button>
+      </div>
+    </div>
+    <div id="archive" class="archive"><div class="empty">Connect to load your archive.</div></div>
+  </section>
+
+  <section class="panel">
+    <h2>🛡️ What “no quality loss” means here</h2>
+    <p class="note">
+      This app uploads each selected photo as a raw binary file. It never decodes and re-encodes the image.
+      A SHA-256 fingerprint is computed locally and becomes the archive ID, so uploading the same exact photo again does not create another full copy.
+      The original filename, MIME type, modification date and byte size are saved as metadata.
+    </p>
+  </section>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const apiUrl = $("apiUrl"), vaultKey = $("vaultKey"), fileInput = $("fileInput");
+const queueEl = $("queue"), archiveEl = $("archive"), statusEl = $("status"), queueCount = $("queueCount");
+let queue = [], selectedKeys = new Set();
+
+function cleanBase(){ return apiUrl.value.trim().replace(/\/+$/,''); }
+function headers(extra={}){ return {Authorization:`Bearer ${vaultKey.value}`, ...extra}; }
+function setStatus(msg,type=""){ statusEl.textContent=msg; statusEl.className=`status ${type}`; }
+function fmt(n){ if(n<1024)return n+" B"; if(n<1048576)return (n/1024).toFixed(1)+" KB"; return (n/1048576).toFixed(1)+" MB"; }
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+async function hashFile(file){
+  const buf = await file.arrayBuffer();
+  const hash = await crypto.subtle.digest("SHA-256",buf);
+  return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function extOf(name){
+  const m = name.match(/\.([A-Za-z0-9]{1,10})$/); return m ? "."+m[1].toLowerCase() : "";
+}
+function renderQueue(){
+  queueCount.textContent=`${queue.length} selected`;
+  queueEl.innerHTML = queue.length ? queue.map((q,i)=>`
+    <div class="item" id="q-${i}">
+      <div class="itemName">${esc(q.file.name)}</div>
+      <div class="meta">${fmt(q.file.size)} • ${esc(q.file.type || "unknown type")} • ${q.state||"ready"}</div>
+      <div class="progress"><div class="bar" style="width:${q.progress||0}%"></div></div>
+    </div>`).join("") : "";
+}
+fileInput.addEventListener("change",()=>{
+  queue=[...fileInput.files].map(file=>({file,state:"ready",progress:0}));
+  renderQueue();
+});
+$("rememberBtn").onclick=()=>{
+  localStorage.setItem("npv_api",cleanBase());
+  localStorage.setItem("npv_key",vaultKey.value);
+  setStatus("Saved on this phone. Anyone with access to this browser profile could read it.","good");
+};
+async function connect(){
+  if(!cleanBase()||!vaultKey.value)return setStatus("Add the Worker URL and vault key.","bad");
+  try{
+    const r=await fetch(cleanBase()+"/api/ping",{headers:headers()});
+    if(!r.ok) throw new Error(await r.text());
+    const j=await r.json(); setStatus(`Connected. ${j.count ?? 0} files in vault.`,"good"); await loadArchive();
+  }catch(e){setStatus("Connection failed: "+e.message,"bad");}
+}
+$("connectBtn").onclick=connect;
+$("refreshBtn").onclick=loadArchive;
+
+async function uploadOne(q,i){
+  q.state="hashing"; q.progress=5; renderQueue();
+  const hash=await hashFile(q.file);
+  const key=hash+extOf(q.file.name);
+  q.state="uploading"; q.progress=20; renderQueue();
+
+  const url=cleanBase()+"/api/upload/"+encodeURIComponent(key);
+  const r=await fetch(url,{
+    method:"PUT",
+    headers:headers({
+      "Content-Type":q.file.type || "application/octet-stream",
+      "X-Original-Name":encodeURIComponent(q.file.name),
+      "X-Original-Size":String(q.file.size),
+      "X-Original-Modified":String(q.file.lastModified || 0),
+      "X-SHA256":hash
+    }),
+    body:q.file
+  });
+  if(!r.ok) throw new Error(await r.text());
+  q.state=(await r.json()).deduplicated ? "already archived" : "archived";
+  q.progress=100; renderQueue();
+}
+$("uploadBtn").onclick=async()=>{
+  if(!queue.length)return setStatus("Pick some photos first.","bad");
+  if(!cleanBase()||!vaultKey.value)return setStatus("Connect your vault first.","bad");
+  $("uploadBtn").disabled=true;
+  let ok=0;
+  for(let i=0;i<queue.length;i++){
+    try{await uploadOne(queue[i],i);ok++;}
+    catch(e){queue[i].state="FAILED: "+e.message;queue[i].progress=0;renderQueue();}
+  }
+  $("uploadBtn").disabled=false;
+  setStatus(`Finished: ${ok}/${queue.length} files safely processed.`,ok===queue.length?"good":"bad");
+  await loadArchive();
+};
+
+async function loadArchive(){
+  if(!cleanBase()||!vaultKey.value)return;
+  archiveEl.innerHTML='<div class="empty">Loading…</div>';
+  try{
+    const r=await fetch(cleanBase()+"/api/list",{headers:headers()});
+    if(!r.ok)throw new Error(await r.text());
+    const j=await r.json();
+    const files=j.files||[];
+    if(!files.length){archiveEl.innerHTML='<div class="empty">Vault is empty.</div>';return;}
+    archiveEl.innerHTML=files.map(f=>{
+      const name=f.originalName||f.key;
+      const img=(f.contentType||"").startsWith("image/") ?
+        `<img class="thumb" loading="lazy" src="${cleanBase()}/api/file/${encodeURIComponent(f.key)}?token=${encodeURIComponent(vaultKey.value)}" alt="">` :
+        `<div class="thumb"></div>`;
+      return `<div class="card">
+        ${img}
+        <label class="row"><input type="checkbox" class="sel" data-key="${esc(f.key)}"> <span class="small">select</span></label>
+        <div class="name">${esc(name)}</div>
+        <div class="meta">${fmt(f.size||0)} • ${esc(f.uploaded||"")}</div>
+        <div class="cardButtons">
+          <button class="secondary dl" data-key="${esc(f.key)}">⬇ Original</button>
+          <button class="danger del" data-key="${esc(f.key)}">Delete</button>
+        </div>
+      </div>`;
+    }).join("");
+    archiveEl.querySelectorAll(".sel").forEach(el=>el.onchange=()=>el.checked?selectedKeys.add(el.dataset.key):selectedKeys.delete(el.dataset.key));
+    archiveEl.querySelectorAll(".dl").forEach(el=>el.onclick=()=>downloadFile(el.dataset.key));
+    archiveEl.querySelectorAll(".del").forEach(el=>el.onclick=()=>deleteFile(el.dataset.key));
+  }catch(e){archiveEl.innerHTML=`<div class="empty">Could not load: ${esc(e.message)}</div>`;}
+}
+
+async function downloadFile(key){
+  const r=await fetch(cleanBase()+"/api/file/"+encodeURIComponent(key),{headers:headers()});
+  if(!r.ok)return setStatus("Download failed.","bad");
+  const blob=await r.blob();
+  const cd=r.headers.get("content-disposition")||"";
+  const m=cd.match(/filename\*=UTF-8''([^;]+)/i);
+  const name=m?decodeURIComponent(m[1]):key;
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+async function deleteFile(key){
+  if(!confirm("Delete this archive copy?"))return;
+  const r=await fetch(cleanBase()+"/api/file/"+encodeURIComponent(key),{method:"DELETE",headers:headers()});
+  if(!r.ok)return setStatus("Delete failed.","bad");
+  selectedKeys.delete(key); await loadArchive(); setStatus("Deleted from vault.","good");
+}
+$("verifyBtn").onclick=async()=>{
+  if(!selectedKeys.size)return setStatus("Select archive files to verify.","bad");
+  setStatus(`Verifying ${selectedKeys.size} file(s)…`);
+  let good=0;
+  for(const key of selectedKeys){
+    const r=await fetch(cleanBase()+"/api/verify/"+encodeURIComponent(key),{headers:headers()});
+    if(r.ok){const j=await r.json();if(j.ok)good++;}
+  }
+  setStatus(`${good}/${selectedKeys.size} selected files passed stored fingerprint verification.`,good===selectedKeys.size?"good":"bad");
+};
+
+apiUrl.value=localStorage.getItem("npv_api")||"";
+vaultKey.value=localStorage.getItem("npv_key")||"";
+if(apiUrl.value&&vaultKey.value) connect();
+</script>
+</body>
+</html>
