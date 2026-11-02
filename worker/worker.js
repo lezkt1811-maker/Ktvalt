@@ -35,6 +35,20 @@ function timingSafeEqual(a, b) {
   return diff === 0;
 }
 
+// Hard cap so storage never goes past R2's 10 GB free tier.
+// 9.5 GB leaves a safety margin. Uploads that would exceed it are refused.
+const STORAGE_CAP_BYTES = 9.5e9;
+
+async function totalStoredBytes(bucket) {
+  let total = 0, cursor;
+  do {
+    const page = await bucket.list({ cursor });
+    for (const obj of page.objects) total += obj.size;
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+  return total;
+}
+
 // Keys look like: <64 hex sha256>.<optional extension>
 const KEY_RE = /^[a-f0-9]{64}(\.[a-z0-9]{1,10})?$/;
 
@@ -98,7 +112,18 @@ export default {
       const existing = await env.PHOTOS.head(key);
       if (existing) return json({ ok: true, deduplicated: true, key });
 
+      const declared = Number(request.headers.get("Content-Length") || 0);
+      if (declared > 0) {
+        const used = await totalStoredBytes(env.PHOTOS);
+        if (used + declared > STORAGE_CAP_BYTES) {
+          return fail("Storage cap reached: 9.5 GB limit. Delete something first.", 507);
+        }
+      }
+
       const body = await request.arrayBuffer();
+      if ((await totalStoredBytes(env.PHOTOS)) + body.byteLength > STORAGE_CAP_BYTES) {
+        return fail("Storage cap reached: 9.5 GB limit. Delete something first.", 507);
+      }
       const digest = toHex(await crypto.subtle.digest("SHA-256", body));
       const claimed = request.headers.get("X-SHA256") || "";
       if (digest !== claimed || !key.startsWith(digest)) return fail("Hash mismatch", 400);
